@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Copyright (c) 2018 Steven Showers
 # Copyright (c) 2017 Micah Culpepper
 #
 # This program is free software: you can redistribute it and/or modify
@@ -80,7 +81,7 @@ ip_netns_export () {
     if [ ! -d /var/run/netns ]; then
         mkdir -p /var/run/netns
     fi
-    ln  -sf "/proc/${1}/ns/net" "/var/run/netns/ns-${1}"
+    ln  -sf "/host/proc/${1}/ns/net" "/var/run/netns/ns-${1}"
 }
 
 get_pid () {
@@ -111,7 +112,7 @@ make_table () {
         id="${i%% *}"
         name="${i#* }"
         r=$(make_row "$id" "$name")
-        printf "${r}\n"
+        printf "${r}\n" | sed 's/valid_lft forever preferred_lft forever/NONE/g'
     done
 }
 
@@ -136,7 +137,7 @@ esac
 
 set -e
 container_data=$(get_container_data "$@")
-dockerveth__addrs="$(ip address show)"
+dockerveth__addrs="$(ip address show 2> /dev/null)"
 table=$(IFS="$NL"; make_table $container_data)
 if [ -t 1 ]; then
     printf "CONTAINER ID\tVETH       \tNAMES\n"
